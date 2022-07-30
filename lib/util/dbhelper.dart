@@ -70,8 +70,11 @@ class DbHelper {
   static Future<List<ShoppingList>> getLists() async {
     final List<Map<String, dynamic>> maps = await db!.query('lists');
     return List.generate(maps.length, (i) {
-      return ShoppingList(maps[i]['name'], maps[i]['priority'],
-          id: maps[i]['id']);
+      return ShoppingList(
+        maps[i]['name'],
+        maps[i]['priority'],
+        id: maps[i]['id'],
+      );
     });
   }
 
@@ -87,5 +90,15 @@ class DbHelper {
               maps[i]['note'],
               id: maps[i]['id'],
             ));
+  }
+
+  static Future<int> deleteList(ShoppingList list) async {
+    int result = await db!.delete('lists', where: 'id=?', whereArgs: [list.id]);
+    return result;
+  }
+
+  static Future<int> deleteItem(ListItem item) async {
+    int result = await db!.delete('items', where: 'id=?', whereArgs: [item.id]);
+    return result;
   }
 }

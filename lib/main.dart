@@ -18,11 +18,7 @@ class MyApp extends StatelessWidget {
     // helper.testDb();
     return MaterialApp(
       title: 'Shopping List',
-      home: Scaffold(
-          appBar: AppBar(
-            title: Text('Shopping List'),
-          ),
-          body: ShList()),
+      home: ShList(),
     );
   }
 }
@@ -48,34 +44,76 @@ class _ShListState extends State<ShList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: (shoppingList != null) ? shoppingList!.length : 0,
-      itemBuilder: (context, index) {
-        return ListTile(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    ItemsScreen(shoppingList: shoppingList![index]),
-              ),
-            );
-          },
-          title: Text(shoppingList![index].name!),
-          leading: CircleAvatar(
-            child: Text(shoppingList![index].priority.toString()),
-          ),
-          trailing: IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => dialog!
-                      .buildDialog(context, shoppingList![index], false));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Shopping List'),
+      ),
+      body: ListView.builder(
+        itemCount: (shoppingList != null) ? shoppingList!.length : 0,
+        itemBuilder: (context, index) {
+          return Dismissible(
+            key: Key(shoppingList![index].name!),
+            onDismissed: (direction) {
+              String strName = shoppingList![index].name!;
+              DbHelper.deleteList(shoppingList![index]);
+              setState(() {
+                shoppingList!.removeAt(index);
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$strName deleted'),
+                ),
+              );
             },
-          ),
-        );
-      },
+            child: ListTile(
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ItemsScreen(shoppingList: shoppingList![index]),
+                        ),
+                      );
+                      setState(() {
+                        shoppingList=shoppingList;
+                      });
+                    },
+                    title: Text(shoppingList![index].name!),
+                    leading: CircleAvatar(
+                      child: Text(shoppingList![index].priority.toString()),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: () async {
+                        await showDialog(
+                            context: context,
+                            builder: (context) => dialog!.buildDialog(
+                                context, shoppingList![index], false));
+                        setState(() {
+                          shoppingList =shoppingList;
+                        });
+                      },
+                    ),
+                  ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // shoppingListIsAdded =
+          await showDialog(
+              context: context,
+              builder: (context) =>
+                  dialog!.buildDialog(context, ShoppingList('', 0), true));
+          setState(() {
+            // shoppingListIsAdded = shoppingListIsAdded;
+            showData();
+          });
+        },
+        child: Icon(Icons.add),
+        backgroundColor: Colors.pink,
+      ),
     );
   }
 
@@ -83,8 +121,7 @@ class _ShListState extends State<ShList> {
     await DbHelper.openDb();
     print('show');
     shoppingList = await DbHelper.getLists();
-    print(
-        '===Full list ===${shoppingList!.map((e) => e.id).toList()}');
+    print('===Full list ===${shoppingList!.map((e) => e.id).toList()}');
     setState(() {
       shoppingList = shoppingList;
     });
