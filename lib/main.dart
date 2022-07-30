@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite_ch6/models/list_items.dart';
 import 'package:sqflite_ch6/models/shopping_list.dart';
+import 'package:sqflite_ch6/ui/items_screen.dart';
+import 'package:sqflite_ch6/ui/shopping_list_dialog.dart';
 import 'package:sqflite_ch6/util/dbhelper.dart';
 
 void main() async {
@@ -34,9 +36,12 @@ class ShList extends StatefulWidget {
 
 class _ShListState extends State<ShList> {
   List<ShoppingList>? shoppingList;
+  List<ListItem>? items;
+  ShoppingListDialog? dialog;
 
   @override
   void initState() {
+    dialog = ShoppingListDialog();
     super.initState();
     showData();
   }
@@ -47,13 +52,27 @@ class _ShListState extends State<ShList> {
       itemCount: (shoppingList != null) ? shoppingList!.length : 0,
       itemBuilder: (context, index) {
         return ListTile(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    ItemsScreen(shoppingList: shoppingList![index]),
+              ),
+            );
+          },
           title: Text(shoppingList![index].name!),
           leading: CircleAvatar(
             child: Text(shoppingList![index].priority.toString()),
           ),
           trailing: IconButton(
             icon: Icon(Icons.edit),
-            onPressed: () {},
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) => dialog!
+                      .buildDialog(context, shoppingList![index], false));
+            },
           ),
         );
       },
@@ -64,16 +83,18 @@ class _ShListState extends State<ShList> {
     await DbHelper.openDb();
     print('show');
     shoppingList = await DbHelper.getLists();
+    print(
+        '===Full list ===${shoppingList!.map((e) => e.id).toList()}');
     setState(() {
       shoppingList = shoppingList;
     });
 
-    ShoppingList list = ShoppingList('Backery', 2);
-    int listId = await DbHelper.insertList(list);
-
-    ListItem item = ListItem(listId, 'Bread', 'many', '1 kg');
-    int itemId = await DbHelper.insertItem(item);
-    print('List Id: $listId');
-    print('Item Id: $itemId');
+    // ShoppingList list = ShoppingList('Backery', 2);
+    // int listId = await DbHelper.insertList(list);
+    //
+    // ListItem item = ListItem(listId, 'Bread', 'many', '1 kg');
+    // int itemId = await DbHelper.insertItem(item);
+    // print('List Id: $listId');
+    // print('Item Id: $itemId');
   }
 }

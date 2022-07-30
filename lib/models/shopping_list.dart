@@ -8,7 +8,7 @@ class ShoppingList {
   Map<String, dynamic> toMap() {
     return {
       //TODO maybe you need to remove ternary operator
-      'id': (id == 0) ? null : id,
+      'id': /*id ?? */id,
       'name': name,
       'priority': priority,
     };
